@@ -63,11 +63,12 @@ class Image:
         # Update thumbnail
         thumb = pyexiv2.exif.ExifThumbnail(metadata_new)
         np_arr = numpy.frombuffer(bytes(thumb.data), numpy.uint8)
-        thumb_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-        thumb_shape = thumb_img.shape
-        for blur in self.blurs:
-            blur_for_thumb = blur.transform_to(shape, thumb_shape)
-            blur_for_thumb.apply(thumb_img, thumb_shape)
-        retval, buf = cv2.imencode(".jpg", thumb_img)
-        thumb.data = buf.tobytes()
+        if np_arr.size > 0:
+            thumb_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            thumb_shape = thumb_img.shape
+            for blur in self.blurs:
+                blur_for_thumb = blur.transform_to(shape, thumb_shape)
+                blur_for_thumb.apply(thumb_img, thumb_shape)
+            retval, buf = cv2.imencode(".jpg", thumb_img)
+            thumb.data = buf.tobytes()
         metadata_new.write()
