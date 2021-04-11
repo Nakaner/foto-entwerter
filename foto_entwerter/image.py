@@ -40,7 +40,13 @@ class Image:
             if self.blurs[i].intersects(minx, miny, maxx, maxy):
                 self.blurs.pop(i)
 
-    def save(self, out_dir):
+    def save(self, out_dir, size_limit, max_compression):
+        # Try to save JPEG with declining compression until it is below the size limit
+        for compression in range(max_compression, 70, -3):
+            if self.save_with_compr(out_dir, compression) <= size_limit:
+                break
+
+    def save_with_compr(self, out_dir, compression):
         img = cv2.imread(self.path)
         shape = img.shape
         for blur in self.blurs:
@@ -48,7 +54,7 @@ class Image:
         outpath = os.path.join(out_dir, os.path.basename(self.path))
         metadata = pyexiv2.ImageMetadata(self.path)
         metadata.read()
-        cv2.imwrite(outpath, img, [cv2.IMWRITE_JPEG_QUALITY, 95])
+        cv2.imwrite(outpath, img, [cv2.IMWRITE_JPEG_QUALITY, compression])
         metadata_new = pyexiv2.ImageMetadata(outpath)
         metadata_new.read()
         metadata.copy(metadata_new)
@@ -72,3 +78,4 @@ class Image:
             retval, buf = cv2.imencode(".jpg", thumb_img)
             thumb.data = buf.tobytes()
         metadata_new.write()
+        return os.path.getsize(outpath)

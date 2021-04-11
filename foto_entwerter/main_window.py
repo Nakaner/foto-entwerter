@@ -18,6 +18,7 @@ import io
 import os
 import gi
 import cairo
+import sys
 from enum import Enum
 
 from .image import Image
@@ -25,6 +26,7 @@ from .blur import Blur
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GdkPixbuf
+import gi.repository.GLib
 
 # inspired by http://zetcode.com/gfx/pycairo/images/
 
@@ -35,6 +37,8 @@ class MainWindow(Gtk.Window):
 
     def __init__(self, args):
         self.images = []
+        self.size_limit = int(args.limit * 1024 * 1024)
+        self.default_jpeg_compression = args.max_jpeg_compression
         self.mode = MainWindow.Mode.ADD
         Gtk.Window.__init__(self, title="Foto-Entwerter")
         self.maximize()
@@ -55,7 +59,7 @@ class MainWindow(Gtk.Window):
         files = [ f for f in files if f.lower().endswith(".jpg") ]
         files.sort()
         self.images = [ Image(os.path.join(args.input_directory, f)) for f in files if f.lower().endswith(".jpg") ]
-        self.load_image()
+        self.load_image_jump_on_fail(True)
         self.connect("key-press-event", self.on_key_press)
 
     def on_key_press(self, widget, event):
@@ -69,19 +73,19 @@ class MainWindow(Gtk.Window):
         if want_next:
             # next image
             self.current_image_index += 1
-            self.load_image()
+            self.load_image_jump_on_fail(True)
             self.event_box.queue_draw()
         elif want_prev:
             # previous image
             self.current_image_index -= 1
-            self.load_image()
+            self.load_image_jump_on_fail(False)
             self.event_box.queue_draw()
         elif want_delete and self.mode != MainWindow.Mode.DELETE:
             self.mode = MainWindow.Mode.DELETE
         elif want_add and self.mode != MainWindow.Mode.ADD:
             self.mode = MainWindow.Mode.ADD
         elif want_save:
-            self.images[self.current_image_index].save(self.output_directory)
+            self.images[self.current_image_index].save(self.output_directory, self.size_limit, self.default_jpeg_compression)
 
     def add_draw_area(self):
         self.event_box = Gtk.EventBox()
@@ -94,8 +98,22 @@ class MainWindow(Gtk.Window):
         self.add(self.event_box)
 
     def load_image(self):
-        self.pb = GdkPixbuf.Pixbuf.new_from_file(self.images[self.current_image_index].path)
+        try:
+            self.pb = GdkPixbuf.Pixbuf.new_from_file(self.images[self.current_image_index].path)
+        except gi.repository.GLib.Error as err:
+            sys.stderr.write("{}\n".format(err))
+            return False
         self.pb = self.pb.apply_embedded_orientation()
+        return True
+
+    def load_image_jump_on_fail(self, forward):
+        while not self.load_image():
+            if forward:
+                self.current_image_index += 1
+            else:
+                self.current_image_index -= 1
+            if self.current_image_index < 0 or self.current_image_index >= len(self.images):
+                return
 
     def click_to_image_coords(self, event_x, event_y):
         return (1 / self.scale_factor) * (event_x - self.x_offset), (1 / self.scale_factor) * (event_y - self.y_offset)
