@@ -28,7 +28,7 @@ yay -S python-exiv2
 
 ## Usage
 
-Foto-Entwerter is called from the command line. It expects to arguments, the input and the output directory.
+Foto-Entwerter is called from the command line. It expects two arguments, the input and the output directory.
 
 In the GUI, you can navigate with your keyboard only:
 
