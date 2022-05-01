@@ -37,7 +37,10 @@ class MainWindow(Gtk.Window):
 
     def __init__(self, args):
         self.images = []
-        self.size_limit = int(args.limit * 1024 * 1024)
+        if args.limit is not None:
+            self.size_limit = int(args.limit * 1024 * 1024)
+        else:
+            self.size_limit = None
         self.default_jpeg_compression = args.max_jpeg_compression
         self.mode = MainWindow.Mode.ADD
         Gtk.Window.__init__(self, title="Foto-Entwerter")

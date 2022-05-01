@@ -42,6 +42,9 @@ class Image:
 
     def save(self, out_dir, size_limit, max_compression):
         # Try to save JPEG with declining compression until it is below the size limit
+        if size_limit is None:
+            self.save_with_compr(out_dir, max_compression)
+            return
         for compression in range(max_compression, 70, -3):
             if self.save_with_compr(out_dir, compression) <= size_limit:
                 break
