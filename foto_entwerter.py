@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import os.path
+import sys
 from foto_entwerter.main_window import MainWindow
 
 def main():
@@ -26,6 +28,9 @@ def main():
     parser.add_argument("input_directory", type=str, help="Input directory")
     parser.add_argument("output_directory", type=str, help="Output directory")
     args = parser.parse_args()
+    if not os.path.isdir(args.output_directory):
+        sys.stderr.write("ERROR: {} does not exist.\n".format(args.output_directory))
+        sys.exit(1)
     app = MainWindow(args)
     from gi.repository import Gtk
     Gtk.main()
