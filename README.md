@@ -2,8 +2,8 @@
 
 Foto-Entwerter (German: invalidate photos or – more literally – remove the value from photos)
 is a tool to black out faces and license plates from a large number of photos in a
-manual but efficient way for a large number of photos. It preserves metadata and updates
-EXIF thumbnails.
+manual but efficient way for a large number of photos. It preserves metadata.
+EXIF thumbnails are not updated.
 
 ## Dependencies
 

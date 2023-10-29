@@ -55,30 +55,11 @@ class Image:
         for blur in self.blurs:
             blur.apply(img, shape)
         outpath = os.path.join(out_dir, os.path.basename(self.path))
-        metadata = pyexiv2.ImageMetadata(self.path)
-        metadata.read()
+        exiv2_img = pyexiv2.Image(self.path)
+        metadata = exiv2_img.read_exif()
         cv2.imwrite(outpath, img, [cv2.IMWRITE_JPEG_QUALITY, compression])
-        metadata_new = pyexiv2.ImageMetadata(outpath)
-        metadata_new.read()
-        metadata.copy(metadata_new)
-        for key in metadata.exif_keys:
-            try:
-                tag = metadata[key]
-            except UnicodeDecodeError as err:
-                sys.stderr.write("Skipping EXIF key {} due to {}\n".format(key, err))
-                metadata_new.__delitem__(key)
         if "Exif.Image.Orientation" in metadata:
-            metadata_new.__delitem__("Exif.Image.Orientation")
-        # Update thumbnail
-        thumb = pyexiv2.exif.ExifThumbnail(metadata_new)
-        np_arr = numpy.frombuffer(bytes(thumb.data), numpy.uint8)
-        if np_arr.size > 0:
-            thumb_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-            thumb_shape = thumb_img.shape
-            for blur in self.blurs:
-                blur_for_thumb = blur.transform_to(shape, thumb_shape)
-                blur_for_thumb.apply(thumb_img, thumb_shape)
-            retval, buf = cv2.imencode(".jpg", thumb_img)
-            thumb.data = buf.tobytes()
-        metadata_new.write()
+            metadata.pop("Exif.Image.Orientation")
+        out_img = pyexiv2.Image(outpath)
+        out_img.modify_exif(metadata)
         return os.path.getsize(outpath)
