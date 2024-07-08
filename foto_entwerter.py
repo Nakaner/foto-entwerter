@@ -23,7 +23,7 @@ from foto_entwerter.main_window import MainWindow
 
 def main():
     parser = argparse.ArgumentParser(description="Blur photos")
-    parser.add_argument("-c", "--max-jpeg-compression", type=int, default=90, help="Default JPEG compression")
+    parser.add_argument("-c", "--max-jpeg-compression", type=int, default=80, help="Default JPEG compression")
     parser.add_argument("-l", "--limit", type=float, help="Size limit in MB", default=4)
     parser.add_argument("input_directory", type=str, help="Input directory")
     parser.add_argument("output_directory", type=str, help="Output directory")
