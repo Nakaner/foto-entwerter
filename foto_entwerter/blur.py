@@ -40,7 +40,7 @@ class Blur:
                 if y >= shape[0]:
                     continue
                 for band in range(0, shape[2]):
-                    img_data.itemset((y, x, band), 0)
+                    img_data[y, x, band] = 0
 
     def transform_to(self, old_shape, new_shape):
         """Return a copy with x, y, width and height scaled onto the new image."""
